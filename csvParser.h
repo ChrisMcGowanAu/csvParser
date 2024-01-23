@@ -70,3 +70,5 @@ double getDoubleFromCell(CsvCellType cell);
 }
 #endif
 
+#endif
+
