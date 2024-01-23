@@ -1,3 +1,13 @@
+#ifndef __CSV_PARSER__
+#define __CSV_PARSER__
+
+/*
+**************************************
+MIT License
+See LICENCE at https://github.com/ChrisMcGowanAu/csvParser
+Copyright (c) 2024 Chris McGowan
+**************************************
+*/
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -60,19 +70,3 @@ double getDoubleFromCell(CsvCellType cell);
 }
 #endif
 
-// If compiled with a c++ compiler, the class can be declared
-#ifdef __cplusplus
-class csvParser {
-public:
-  csvParser(char *filename, char sep) { csv = readCsv(filename, sep); }
-  CsvCellType getCell(uint32_t row, uint32_t col) {
-    return getCell(csv, row, col);
-  }
-  uint32_t numRows() { return numRows(csv); }
-  uint32_t numCols() { return numCols(csv); }
-  ~csvParser() { freeMem(csv); }
-
-private:
-  CsvType *csv;
-}
-#endif

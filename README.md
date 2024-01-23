@@ -16,5 +16,69 @@ with a third file csvTest.c which can be used as an example and for testing
 
 Code example:
 
+// readCsv reads the file into memory ( a tree like structure )
+CsvType *csv = readCsv(argv[1], ',');
+uint32_t nRows = csv->numRows;
+uint32_t nCols = csv->numCols;
+CsvCellType cell = {};
+for (int r = 0; r < nRows; r++) {
+  for (int c = 0; c < nCols; c++) {
+    // getCell returns the contents at r,c 
+    cell = getCell(csv, r, c);
+  }
+}
+
+typedef struct CsvCellType
+{
+  // an empty cell has 0 bytes
+  uint32_t bytes; 
+  CellStatusType status; // validity of the cell
+  char *cellContents;
+} CsvCellType;
+
+
+the CsvCellRurned struct retured is a copy of the data in the tree.
+It retuns information about the cell, such as if it actually was found, 
+if it is empty and if it is the last cell in the row.
+The data in the cell is a char* ( the number of bytes is also recored )
+exactly was it was in the csv
+
+============================ This is csv_Test.c =====================
+include "csvParser.h"
+#include <stdio.h>
+#include <unistd.h>
+
+// This reads a csv files and prints it to stdout
+int main(int argc, char **argv) {
+  CsvType *csv = readCsv(argv[1], ',');
+  CsvCellType cell = {};
+  uint32_t nRows = csv->numRows;
+  uint32_t nCols = csv->numCols;
+  printf("Rows %d max columns %d\n", nRows, nCols);
+  uint32_t r = 0;
+  uint32_t c = 0;
+  for (r = 0; r < nRows; r++) {
+    for (c = 0; c < nCols; c++) {
+      cell = getCell(csv, r, c);
+      switch (cell.status) {
+          case missingRow:
+          case missingCol:
+            break;
+          case emptyCell:
+            if (cell.lastCellInRow == false)
+              printf(",");
+            break;
+          case normalCell:
+            printf("%s", cell.cellContents);
+            if (cell.lastCellInRow == false)
+              printf(",");
+            break;
+      }
+    }
+    printf("\n");
+  }
+  // Free used memory
+  freeMem(csv);
+}
 
 
