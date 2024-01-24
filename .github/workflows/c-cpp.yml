@@ -18,6 +18,6 @@ jobs:
     - name:  cd build 
       run:  cd build
     - name:  cmake 
-      run:  cmake ../CMakefile.txt 
+      run:  cmake ../CMakeLists.txt
     - name:  make 
       run:  make
