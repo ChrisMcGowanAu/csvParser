@@ -178,18 +178,19 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
   char wierdDquote = 0xe2;
   RowType *row = (RowType *)malloc(sizeof(RowType));
   memset((void *)row, 0, sizeof(RowType));
+  row->first = nullptr;
   if (csv->firstRow == nullptr) {
     csv->firstRow = row;
-    row->next = NULL;
-    row->prev = NULL;
+    row->next = nullptr;
+    row->prev = nullptr;
     row->rowId = 0;
   } else {
     RowType *lastRow = csv->firstRow;
-    while (lastRow->next != NULL) {
+    while (lastRow->next != nullptr) {
       lastRow = lastRow->next;
     }
     lastRow->next = row;
-    row->next = NULL;
+    row->next = nullptr;
     row->prev = lastRow;
     row->rowId = lastRow->rowId + 1;
   }
