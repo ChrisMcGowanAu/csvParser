@@ -1,3 +1,11 @@
+/*
+**************************************
+MIT License
+See LICENCE at https://github.com/ChrisMcGowanAu/csvParser
+Copyright (c) 2024 Chris McGowan
+**************************************
+*/
+
 #include "csvParser.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -166,6 +174,7 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
   char dquote = '"';
   // This is an attempt to identify some 8 bit double quote excel generates
   // It does not seem to work. More to be done here to identify these
+  // use uint8_t ?
   char wierdDquote = 0xe2;
   RowType *row = (RowType *)malloc(sizeof(RowType));
   memset((void *)row, 0, sizeof(RowType));
@@ -211,7 +220,6 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
       lastPos = pos;
       pos = i;
       // Extract the string between lastPas and Pos
-      // TBD  cellPtr->cell.cellContents
       CellType *cellPtr = (CellType *)malloc(sizeof(CellType));
       cellBuf[0] = 0;
       cellPtr->cell.bytes = 0;
@@ -247,7 +255,7 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
       // Use this Cell as the start of the list
       if (row->first == nullptr) {
         row->first = cellPtr;
-        // Add the cell to the end of the list
+      // or add the cell to the end of the Cell list
       } else {
         CellType *currRow = row->first;
         while (currRow->next != nullptr) {
@@ -265,7 +273,7 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
 
 CsvType *readCsv(char *filename, char sep) {
   FILE *fp = NULL;
-  CsvType *csv = (CsvType *)malloc(sizeof(RowType));
+  CsvType *csv = (CsvType *)malloc(sizeof(CsvType));
   bzero((void *)csv, sizeof(CsvType));
   uint32_t lines = 0;
   char line0[LINEMAX];
@@ -291,3 +299,5 @@ CsvType *readCsv(char *filename, char sep) {
 
 uint32_t numRows(CsvType *csv) { return csv->numRows; }
 uint32_t numCols(CsvType *csv) { return csv->numCols; }
+
+

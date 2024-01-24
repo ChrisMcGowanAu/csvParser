@@ -8,6 +8,7 @@ See LICENCE at https://github.com/ChrisMcGowanAu/csvParser
 Copyright (c) 2024 Chris McGowan
 **************************************
 */
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -55,16 +56,23 @@ typedef struct CsvType {
 extern "C" {
 #endif
 
-void freeMem(CsvType *csv);
+///////////////////////////////////////////////////////
+// Read the csv file into memory
+///////////////////////////////////////////////////////
 CsvType *readCsv(char *filename, char seperator);
+
+///////////////////////////////////////////////////////
+// Get the cell value at row,col
+///////////////////////////////////////////////////////
 CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col);
+
 uint32_t numRows(CsvType *csv);
 uint32_t numCols(CsvType *csv);
 
-int64_t getInt64FromCell(CsvCellType cell);
-int32_t getInt32FromCell(CsvCellType cell);
-float getFloatFromCell(CsvCellType cell);
-double getDoubleFromCell(CsvCellType cell);
+///////////////////////////////////////////////////////
+// free up memory used in the csv tree
+///////////////////////////////////////////////////////
+void freeMem(CsvType *csv);
 
 #ifdef __cplusplus
 }

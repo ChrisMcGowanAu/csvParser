@@ -3,16 +3,11 @@
 #include <unistd.h>
 
 int main(int argc, char **argv) {
-  CsvType *csv = readCsv(argv[1], ',');
-  // CsvCellType getCell(CsvType *csv,uint32_t row, uint32_t col)
+  if ( argc < 2 ) {
+    return 1;
+  }
+  CsvType *csv = readCsv(argv[argc-1], ',');
   CsvCellType cell = {};
-  /*
-  printf("Test 1,1 %s\n",cell.cellContents);
-  cell = getCell(csv,2,2);
-  printf("Test 2,2 %s\n",cell.cellContents);
-  cell = getCell(csv,8,5);
-  printf("Test 8,5 %s\n",cell.cellContents);
-  */
   uint32_t nRows = csv->numRows;
   uint32_t nCols = csv->numCols;
   printf("Rows %d max columns %d\n", nRows, nCols);
