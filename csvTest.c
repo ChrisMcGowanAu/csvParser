@@ -7,19 +7,15 @@ int main(int argc, char **argv) {
     return 1;
   }
   CsvType *csv = readCsv(argv[argc-1], ',');
-  CsvCellType cell = {};
   uint32_t nRows = csv->numRows;
   uint32_t nCols = csv->numCols;
-  printf("Rows %d max columns %d\n", nRows, nCols);
-  uint32_t r = 0;
-  uint32_t c = 0;
-  for (r = 0; r < nRows; r++) {
-    for (c = 0; c < nCols; c++) {
-      cell = getCell(csv, r, c);
+  printf("Rows %u max columns %u\n", nRows, nCols);
+  for (uint32_t r = 0; r < nRows; r++) {
+    for (uint32_t c = 0; c < nCols; c++) {
+      CsvCellType cell = getCell(csv, r, c);
       switch (cell.status) {
       case missingRow:
       case missingCol:
-        // printf("?");
         break;
       case emptyCell:
         if (cell.lastCellInRow == false)

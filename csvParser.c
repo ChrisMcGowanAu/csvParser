@@ -71,7 +71,7 @@ void freeMem(CsvType *csv) {
 }
 
 uint32_t countCols(RowType *rowPtr) {
-  uint32_t numCols = 1;
+  uint32_t nCols = 1;
   if (rowPtr == nullptr) {
     return 0;
   }
@@ -80,9 +80,9 @@ uint32_t countCols(RowType *rowPtr) {
   while (colPtr != nullptr) {
     nextPtr = colPtr->next;
     colPtr = nextPtr;
-    numCols++;
+    nCols++;
   }
-  return (numCols);
+  return (nCols);
 }
 
 void countRowsAndCols(CsvType *csv) {
@@ -128,7 +128,7 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   }
   if (rowNumber != row) {
     if (DEBUGME > 0)
-      printf("row %d not found\n", row);
+      printf("row %u not found\n", row);
     cell.status = missingRow;
     return (cell);
   }
@@ -137,7 +137,7 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   if (colCellPtr == nullptr) {
     rowPtr->numCols = 0;
     if (DEBUGME > 0)
-      printf("No columns for row %d\n", row);
+      printf("No columns for row %u\n", row);
     cell.status = missingCol;
     return (cell);
   }
@@ -148,7 +148,7 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   }
   if (colNumber != col) {
     if (DEBUGME > 4)
-      printf("columns %d for row %d not found\n", col, row);
+      printf("columns %u for row %u not found\n", col, row);
     cell.status = missingCol;
     return (cell);
   } else {
@@ -196,7 +196,6 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
   }
 
   uint32_t pos = 0;
-  uint32_t lastPos = 0;
   char cellBuf[LINEMAX];
   bool insideWierdDquote = false;
   bool insideDquote = false;
@@ -218,7 +217,7 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
     }
     if ((buffer[i] == sep && !insideDquote && !insideWierdDquote) ||
         buffer[i] == '\n' || buffer[i] == '\r') {
-      lastPos = pos;
+      uint32_t lastPos = pos;
       pos = i;
       // Extract the string between lastPas and Pos
       CellType *cellPtr = (CellType *)malloc(sizeof(CellType));
@@ -251,7 +250,7 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
         cellPtr->cell.cellContents = (char *)malloc(len + 4); // hack
         strncpy(cellPtr->cell.cellContents, cellBuf, len);
         if (DEBUGME > 1)
-          printf("cellBuf %d %s\n", len, cellBuf);
+          printf("cellBuf %u %s\n", len, cellBuf);
       }
       // Use this Cell as the start of the list
       if (row->first == nullptr) {
@@ -276,15 +275,12 @@ CsvType *readCsv(char *filename, char sep) {
   FILE *fp = NULL;
   CsvType *csv = (CsvType *)malloc(sizeof(CsvType));
   bzero((void *)csv, sizeof(CsvType));
-  uint32_t lines = 0;
-  char line0[LINEMAX];
-  char buffer[LINEMAX];
   fp = fopen(filename, "r");
   if (fp != NULL) {
-    bzero((void *)line0, sizeof(line0));
+    uint32_t lines = 0;
+    char buffer[LINEMAX];
     bzero((void *)buffer, sizeof(buffer));
-    while (fgets(line0, LINEMAX, fp) != nullptr) {
-      strncpy(buffer, line0, sizeof(buffer));
+    while (fgets(buffer, LINEMAX, fp) != nullptr) {
       parseLine(csv, buffer, sep);
       if (DEBUGME > 1)
         printf("Parsing %s", buffer);
