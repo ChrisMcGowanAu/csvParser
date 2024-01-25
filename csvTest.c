@@ -3,10 +3,10 @@
 #include <unistd.h>
 
 int main(int argc, char **argv) {
-  if ( argc < 2 ) {
+  if (argc < 2) {
     return 1;
   }
-  CsvType *csv = readCsv(argv[argc-1], ',');
+  CsvType *csv = readCsv(argv[argc - 1], ',');
   uint32_t nRows = csv->numRows;
   uint32_t nCols = csv->numCols;
   printf("Rows %u max columns %u\n", nRows, nCols);

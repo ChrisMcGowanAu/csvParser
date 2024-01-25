@@ -255,7 +255,7 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
       // Use this Cell as the start of the list
       if (row->first == nullptr) {
         row->first = cellPtr;
-      // or add the cell to the end of the Cell list
+        // or add the cell to the end of the Cell list
       } else {
         CellType *currRow = row->first;
         while (currRow->next != nullptr) {
@@ -296,5 +296,3 @@ CsvType *readCsv(char *filename, char sep) {
 
 uint32_t numRows(CsvType *csv) { return csv->numRows; }
 uint32_t numCols(CsvType *csv) { return csv->numCols; }
-
-
