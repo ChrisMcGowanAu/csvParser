@@ -16,6 +16,12 @@ Copyright (c) 2024 Chris McGowan
 // DEBUGME can be 0 1 2 3 4 5
 #define DEBUGME 0
 
+const uint32_t excelStartDQ = 0xE2809C;
+const uint32_t excelEndDQ = 0xE2809D;
+const uint8_t squote = 0x27;
+const uint8_t dquote = 0x22;
+const uint8_t altDquote = 0xe2;
+
 typedef struct CellType {
   CsvCellType cell;
   struct CellType *next;
@@ -116,8 +122,8 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   RowType *rowPtr = csv->firstRow;
   uint32_t rowNumber = 0;
   if (rowPtr == nullptr) {
-    if (DEBUGME > 0)
-      printf("No Rows defined\n");
+    if (DEBUGME > 1)
+      fprintf(stderr, "No Rows defined\n");
     cell.status = missingRow;
     return (cell);
   }
@@ -127,7 +133,7 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   }
   if (rowNumber != row) {
     if (DEBUGME > 0)
-      printf("row %u not found\n", row);
+      fprintf(stderr, "row %u not found\n", row);
     cell.status = missingRow;
     return (cell);
   }
@@ -135,8 +141,8 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   CellType *colCellPtr = rowPtr->first;
   if (colCellPtr == nullptr) {
     rowPtr->numCols = 0;
-    if (DEBUGME > 0)
-      printf("No columns for row %u\n", row);
+    if (DEBUGME > 1)
+      fprintf(stderr, "No columns for row %u\n", row);
     cell.status = missingCol;
     return (cell);
   }
@@ -147,7 +153,7 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   }
   if (colNumber != col) {
     if (DEBUGME > 4)
-      printf("columns %u for row %u not found\n", col, row);
+      fprintf(stderr, "columns %u for row %u not found\n", col, row);
     cell.status = missingCol;
     return (cell);
   } else {
@@ -168,14 +174,13 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   return (cell);
 }
 
-const char dquote = '"';
 void parseLine(CsvType *csv, char *buffer, char sep) {
   // search for a seperator
   // This is an attempt to identify some 8 bit double quote excel generates
   // It does not seem to work. More to be done here to identify these
   // use uint8_t ?
   // This is not part of the csv standard
-  char wierdDquote = 0xe2;
+  // uint8_t wierdDquote = 0xe2;
   RowType *row = (RowType *)malloc(sizeof(RowType));
   memset((void *)row, 0, sizeof(RowType));
   row->first = nullptr;
@@ -197,31 +202,42 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
 
   uint32_t pos = 0;
   char cellBuf[LINEMAX];
-  bool insideWierdDquote = false;
+  bool insideExcelDQ = false;
   bool insideDquote = false;
   for (uint32_t i = 0; i < strlen(buffer); i++) {
-    // See comment above on 0xE2 ( '"' + 0xC0 ? )
-    if (buffer[i] == wierdDquote) {
-      if (insideWierdDquote) {
-        insideWierdDquote = false;
-      } else {
-        insideWierdDquote = true;
+    uint8_t thisCh = buffer[i];
+    if (thisCh == altDquote) {
+      uint32_t excelCode = (uint8_t)buffer[i] << 16 |
+                           (uint8_t)buffer[i + 1] << 8 | (uint8_t)buffer[i + 2];
+      if (excelCode == excelStartDQ) {
+        insideExcelDQ = true;
+      }
+      if (excelCode == excelEndDQ) {
+        insideExcelDQ = false;
       }
     }
-    if (buffer[i] == dquote) {
+    if (thisCh == dquote) {
       if (insideDquote) {
         insideDquote = false;
       } else {
         insideDquote = true;
       }
     }
-    if ((buffer[i] == sep || buffer[i] == '\n' || buffer[i] == '\r') &&
-        (!insideDquote && !insideWierdDquote)) {
+    if ((thisCh == sep || thisCh == '\n' || thisCh == '\r') &&
+        (!insideDquote && !insideExcelDQ)) {
       uint32_t lastPos = pos;
       pos = i;
       if (pos == 0) {
         // This is a weird case. the first ch is  the seperator
         continue;
+      }
+      if (i > 0) {
+        uint8_t lastCh = buffer[i - 1];
+        // This test detects DOS/WINDOWS cr-lf
+        // The previous cell was the last
+        if (lastCh == '\n' || lastCh == '\r') {
+          continue;
+        }
       }
       // Extract the string between lastPas and Pos
       CellType *cellPtr = (CellType *)malloc(sizeof(CellType));
@@ -254,7 +270,7 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
         cellPtr->cell.cellContents = (char *)malloc(len + 4); // hack
         strncpy(cellPtr->cell.cellContents, cellBuf, len);
         if (DEBUGME > 1)
-          printf("cellBuf %u %s\n", len, cellBuf);
+          fprintf(stderr, "cellBuf %u %s\n", len, cellBuf);
       }
       // Use this Cell as the start of the list
       if (row->first == nullptr) {
@@ -271,16 +287,41 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
   }
 }
 
-// Count dquote's
-uint32_t countDquotes(char *buffer) {
-  uint32_t nDquotes = 0;
+uint32_t countCharacter(char *buffer, uint8_t ch) {
+  uint32_t nCharacters = 0;
   uint32_t len = strlen(buffer);
-  for (int i = 0; i < len; i++) {
-    if (buffer[i] == dquote) {
-      nDquotes++;
+  for (int i = 0; i < (int)len; i++) {
+    if ((uint8_t)buffer[i] == ch) {
+      nCharacters++;
     }
   }
-  return nDquotes;
+  return nCharacters;
+}
+
+// Count dquote's
+uint32_t countDquotes(char *buffer) { return countCharacter(buffer, dquote); }
+
+uint32_t countAltDquotes(char *buffer) {
+  // Thank you Microsoft, you have complicated a very simple idea.
+  // A pox on you and your editors and overpriced office tools.
+  // Rather than count, it returns an even number if no excelStartDQ was found
+  // or it found excelEndDQ last in the line. If excelStartDQ was the last
+  // found, an odd number is returned
+  uint32_t nCharacters = 0;
+  uint32_t len = strlen(buffer);
+  for (int i = 0; i < (int)len; i++) {
+    if ((uint8_t)buffer[i] == altDquote) {
+      uint32_t excelCode = (uint8_t)buffer[i] << 16 |
+                           (uint8_t)buffer[i + 1] << 8 | (uint8_t)buffer[i + 2];
+      if (excelCode == excelStartDQ) {
+        nCharacters = 1;
+      }
+      if (excelCode == excelEndDQ) {
+        nCharacters = 2;
+      }
+    }
+  }
+  return nCharacters;
 }
 
 CsvType *readCsv(char *filename, char sep) {
@@ -295,15 +336,25 @@ CsvType *readCsv(char *filename, char sep) {
     uint32_t startIdx = 0;
     while (fgets(&buffer[startIdx], LINEMAX, fp) != nullptr) {
       uint32_t nDquotes = countDquotes(buffer);
+      uint32_t nAltDquotes = countAltDquotes(buffer);
       // if number of double quotes is odd, append next line to string
       if (nDquotes % 2 == 1) {
+        startIdx = strlen(buffer);
+        continue;
+      } else if (nAltDquotes % 2 == 1) {
         startIdx = strlen(buffer);
         continue;
       } else {
         parseLine(csv, buffer, sep);
         startIdx = 0;
       }
-      if (DEBUGME > 1)
+      // Just in case. Dont let the buffer grow beyond LINEMAX/2
+      if (startIdx > LINEMAX / 2) {
+        fprintf(stderr, "Mismatched double quotes in CSV file.\n");
+        parseLine(csv, buffer, sep);
+        startIdx = 0;
+      }
+      if (DEBUGME == 5)
         printf("Parsing %s", buffer);
       lines++;
     }
