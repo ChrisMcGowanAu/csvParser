@@ -25,7 +25,7 @@ Copyright (c) 2024 Chris McGowan
 //////////////////////////////////////
 
 #ifndef __cplusplus
-#  define nullptr NULL
+#define nullptr NULL
 #endif
 
 typedef enum CellStatusType {
@@ -46,7 +46,7 @@ typedef struct CsvCellType {
 typedef struct RowType RowType; // Defined in the c file
 
 typedef struct CsvType {
-  RowType  **rowLookup;
+  RowType **rowLookup;
   uint32_t numRows;
   uint32_t numCols;
   RowType *firstRow;
@@ -84,15 +84,16 @@ void freeMem(CsvType *csv);
 // Class difinitions
 #ifdef __cplusplus
 class CsvClass {
-    public:
-        CsvClass(); 
-        ~CsvClass(); 
-        uint32_t NumRows();
-        uint32_t NumCols();
-        bool ReadCsv(char *filename, char seperator);
-        CsvCellType GetCell(uint32_t row, uint32_t col);
-    private:
-        CsvType *csv;
+public:
+  CsvClass();
+  ~CsvClass();
+  uint32_t NumRows();
+  uint32_t NumCols();
+  bool ReadCsv(char *filename, char seperator);
+  CsvCellType GetCell(uint32_t row, uint32_t col);
+
+private:
+  CsvType *csv;
 };
 #endif
 

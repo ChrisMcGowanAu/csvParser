@@ -10,10 +10,10 @@ int main(int argc, char **argv) {
   bool ok = csvClass.ReadCsv(argv[argc - 1], ',');
   uint32_t nRows = csvClass.NumRows();
   uint32_t nCols = csvClass.NumCols();
-  printf("Read ok %d Rows %u max columns %u\n",ok,nRows,nCols);
+  printf("Read ok %d Rows %u max columns %u\n", ok, nRows, nCols);
   for (uint32_t r = 0; r < nRows; r++) {
     for (uint32_t c = 0; c < nCols; c++) {
-      CsvCellType cell = csvClass.GetCell(r,c);
+      CsvCellType cell = csvClass.GetCell(r, c);
       switch (cell.status) {
       case missingRow:
       case missingCol:

@@ -7,10 +7,10 @@ int main(int argc, char **argv) {
     return 1;
   }
   CsvType *csv = readCsv(argv[argc - 1], ',');
-  fprintf(stderr,"Finished Reading %s\n",argv[argc - 1]);
+  fprintf(stderr, "Finished Reading %s\n", argv[argc - 1]);
   uint32_t nRows = csv->numRows;
   uint32_t nCols = csv->numCols;
-  fprintf(stderr,"Rows %u max columns %u\n", nRows, nCols);
+  fprintf(stderr, "Rows %u max columns %u\n", nRows, nCols);
   for (uint32_t r = 0; r < nRows; r++) {
     for (uint32_t c = 0; c < nCols; c++) {
       CsvCellType cell = getCell(csv, r, c);
