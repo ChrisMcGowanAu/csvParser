@@ -16,13 +16,15 @@ cell = getCell(csvPtr, row, column);
 
 void freeMem(csvPtr);
 
+For the C++ version, There is a simple class defined
+
 
 I have written several csv parsers over the years. These parsers used the troublesome C functions 'strsep' and 'strtok'
 either I was using them wrong or they are buggy under a high load, they also behaved in different ways on different machines
 and OS's. This csv parser does the tokenising itself, which proved to be easier than getting 'strtok' to work reliably.
 The code reads the csv and into a tree like structure, a linked list of rows, each row has a linked list of cells. This makes it fast and easy to access each cell which can be accesses via row and column.
 
-Whilst it is very fast, It should read files of any size, limited by how much memory you have. For extremely large files, it could be made more efficient at the expense of creating fast lookup of rows, if that was needed.
+Whilst it is very fast, It should read files of any size, limited by how much memory you have. For extremely large files, it now uses an array of row pointers to quickly find the correct row. It has been tested on csv files with 500000 lines.
 
 I used to roll my own linked lists before the C++ STL came along, and it was fun for me to write code using linked lists again. 
 
@@ -30,15 +32,24 @@ I have tried to make it RFC 4180 compliant.
 This repository consists of three files
 csvParser.h
 csvParser.c
+csvTest.c
 
 The third file csvTest.c can be used as an example and for testing
-
 The csv file is read by the this function
 
 CsvType *csv = readCsv(filename, csvSeperator);
-
 Cells can be acceses via this function
-    
+cell = getCell(csv, row, column);
+
+for C++, there is a simple class defined, but it basically uses the c code.
+csvParser.h
+csvParser.cpp (This is the same file as csvParser.c)
+csvTest.cpp
+
+
+The csv file is read by the this function
+CsvType *csv = readCsv(filename, csvSeperator);
+Cells can be acceses via this function
 cell = getCell(csv, row, column);
 
 The returned cell data structure has enough information to tell is the cell exists, if it is empty and if it the last cell in the list (the end of the line)
@@ -50,4 +61,4 @@ Memory Leaks? I could not measure any. :-)
 
 Possible improvements:
 1) Allow single quotes as well as double quotes
-2) Create an array of row pointers for fast finding of rows.
+2) Windows based files will loose the the Line feed characters, this might be an issue for multiple line cells.  

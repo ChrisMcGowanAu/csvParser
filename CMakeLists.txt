@@ -1,18 +1,19 @@
 cmake_minimum_required(VERSION 3.21)
-project(csvParser C)
+project(csvParser C CXX)
 set(
-    SOURCE_FILES_TEST
+    C_SOURCE_FILES
     csvParser.c
     csvTest.c
 )
-
 set(
-    SOURCE_FILES
-    csvParser.c
+    CPP_SOURCE_FILES
+    csvParser.cpp
+    csvTest.cpp
 )
 
 set(CMAKE_C_STANDARD 17)
 
-add_library(csvParser STATIC ${SOURCE_FILES})
+add_executable(cParserTest ${C_SOURCE_FILES} )
 
-add_executable(csvParserTest ${SOURCE_FILES_TEST} )
+set(CMAKE_CXX_STANDARD 17)
+add_executable(cppParserTest ${CPP_SOURCE_FILES} )
