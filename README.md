@@ -4,9 +4,26 @@
 
 A parser for csv files in C, for C and C++
 
-This is a RFC 4180  parser for reading csv files for C.
+This is an RFC 4180  parser for reading csv files for C and C++.
 It also handles csv files created by Excel, including multi line cells.
-It can handle csv files with multi-line cells, and handles different new line conventions.
+The latest change allows it to read very large csv files ( tested to 500,000 rows ) 
+
+The csv file is read into a linked list of rows, each row has a linked list of cells for that row. After creation of this list, an array of row pointers is created to allow fast lookup.
+
+This allows each cell be access directly and in any order. 
+
+//////////////////////////////////////
+// The rows are a linked list
+// Each row has a linked list of cells
+// R - C - C
+// |
+// R - C -C - C - C - C
+// |
+// R - C -C - C - C
+// |
+// etc
+//////////////////////////////////////
+
 
 There are just 3 functions, one to read the file and one to get access to the data in each cell, and one to free the memory used when done. It compiles fine using C or C++, so it can be used for C and C++. 
 
@@ -16,8 +33,11 @@ cell = getCell(csvPtr, row, column);
 
 void freeMem(csvPtr);
 
+See csvTest.c for a C example of reading and recreating the csv file to stdout.
+
 For the C++ version, There is a simple class defined
 
+See csvTest.cpp for a C++ example of reading and recreating the csv file to stdout.
 
 I have written several csv parsers over the years. These parsers used the troublesome C functions 'strsep' and 'strtok'
 either I was using them wrong or they are buggy under a high load, they also behaved in different ways on different machines
@@ -29,13 +49,15 @@ Whilst it is very fast, It should read files of any size, limited by how much me
 I used to roll my own linked lists before the C++ STL came along, and it was fun for me to write code using linked lists again. 
 
 I have tried to make it RFC 4180 compliant. 
-This repository consists of three files
+This repository consists of two files
 csvParser.h
 csvParser.c
+
+-- for testing and an example
 csvTest.c
 
 The third file csvTest.c can be used as an example and for testing
-The csv file is read by the this function
+The csv file is read by this function
 
 CsvType *csv = readCsv(filename, csvSeperator);
 Cells can be acceses via this function
@@ -45,7 +67,6 @@ for C++, there is a simple class defined, but it basically uses the c code.
 csvParser.h
 csvParser.cpp (This is the same file as csvParser.c)
 csvTest.cpp
-
 
 The csv file is read by the this function
 CsvType *csv = readCsv(filename, csvSeperator);

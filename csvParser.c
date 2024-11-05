@@ -123,9 +123,8 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   cell.status = emptyCell;
   cell.lastCellInRow = true;
   cell.bytes = 0;
+  cell.cellContents = nullptr;
   RowType *rowPtr = csv->rowLookup[row];
-  /*
-   **/
   uint32_t rowNumber = 0;
   if (rowPtr == nullptr) {
     if (DEBUGME > 1)
@@ -133,12 +132,6 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
     cell.status = missingRow;
     return (cell);
   }
-  /*
-  while (rowPtr->next != nullptr && rowNumber != row) {
-    rowPtr = rowPtr->next;
-    rowNumber++;
-  }
-  **/
   rowNumber = rowPtr->rowId;
   if (rowNumber != row) {
     if (DEBUGME > 0)
@@ -356,7 +349,7 @@ uint32_t countAltDquotes(char *buffer) {
 // on very large csv files.
 ////////////////////////////////////////////////////
 void buildRowIndex(CsvType *csv) {
-  csv->rowLookup = (RowType **)malloc((csv->numRows + 1) * sizeof(uint64_t));
+  csv->rowLookup = (RowType **)malloc((csv->numRows + 1) * sizeof(RowType*));
   RowType *rowPtr = csv->firstRow;
   RowType *nextPtr = nullptr;
   uint32_t rowIndex = 0;
@@ -377,14 +370,14 @@ void buildRowIndex(CsvType *csv) {
 // Read the csv file
 ////////////////////////////////////////////////////
 CsvType *readCsv(char *filename, char sep) {
-  FILE *fp = NULL;
+  FILE *fp = nullptr;
   CsvType *csv = (CsvType *)malloc(sizeof(CsvType));
-  bzero((void *)csv, sizeof(CsvType));
+  memset((void *)csv, 0, sizeof(struct CsvType));
   fp = fopen(filename, "r");
-  if (fp != NULL) {
+  if (fp != nullptr) {
     uint32_t lines = 0;
     char buffer[LINEMAX];
-    bzero((void *)buffer, sizeof(buffer));
+    memset((void *) buffer, 0, sizeof(buffer));
     uint32_t startIdx = 0;
     while (fgets(&buffer[startIdx], LINEMAX, fp) != nullptr) {
       if (startIdx > 0) {
