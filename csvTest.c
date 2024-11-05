@@ -1,6 +1,6 @@
+#include "csvParser.h"
 #include <stdio.h>
 #include <unistd.h>
-#include "csvParser.h"
 
 int main(int argc, char **argv) {
   if (argc < 2) {

@@ -81,7 +81,7 @@ void freeMem(CsvType *csv);
 }
 #endif
 // For C++ only
-// Class definitions
+// Class difinitions
 #ifdef __cplusplus
 class CsvClass {
 public:

@@ -349,7 +349,7 @@ uint32_t countAltDquotes(char *buffer) {
 // on very large csv files.
 ////////////////////////////////////////////////////
 void buildRowIndex(CsvType *csv) {
-  csv->rowLookup = (RowType **)malloc((csv->numRows + 1) * sizeof(RowType*));
+  csv->rowLookup = (RowType **)malloc((csv->numRows + 1) * sizeof(RowType *));
   RowType *rowPtr = csv->firstRow;
   RowType *nextPtr = nullptr;
   uint32_t rowIndex = 0;
@@ -377,7 +377,7 @@ CsvType *readCsv(char *filename, char sep) {
   if (fp != nullptr) {
     uint32_t lines = 0;
     char buffer[LINEMAX];
-    memset((void *) buffer, 0, sizeof(buffer));
+    memset((void *)buffer, 0, sizeof(buffer));
     uint32_t startIdx = 0;
     while (fgets(&buffer[startIdx], LINEMAX, fp) != nullptr) {
       if (startIdx > 0) {
