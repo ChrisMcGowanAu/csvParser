@@ -18,7 +18,7 @@ Copyright (c) 2024 Chris McGowan
 
 #define LINEMAX 32 * 1024
 // DEBUGME can be 0 1 2 3 4 5
-#define DEBUGME 0
+#define DEBUGME 2
 
 const uint32_t excelStartDQ = 0xE2809C;
 const uint32_t excelEndDQ = 0xE2809D;
@@ -51,7 +51,7 @@ void freeCell(CellType *cellPtr) {
   free(cellPtr);
 }
 
-void freeRow(RowType *rowPtr) {
+static void freeRow(RowType *rowPtr) {
   if (rowPtr == nullptr) {
     return;
   }
@@ -65,54 +65,51 @@ void freeRow(RowType *rowPtr) {
   free(rowPtr);
 }
 
+
 void freeMem(CsvType *csv) {
-  RowType *rowPtr = csv->firstRow;
-  RowType *nextPtr = nullptr;
-  if (rowPtr == nullptr) {
-    return;
-  }
-  while (rowPtr->next != nullptr) {
-    nextPtr = rowPtr->next;
-    freeRow(rowPtr);
-    rowPtr = nextPtr;
-  }
-  freeRow(rowPtr);
+    if (csv == NULL) {
+        return;
+    }
+
+    RowType *rowPtr = csv->firstRow;
+    while (rowPtr != NULL) {
+        RowType *nextPtr = rowPtr->next;
+        freeRow(rowPtr);
+        rowPtr = nextPtr;
+    }
+
+    free(csv->rowLookup);
+    free(csv);
 }
 
-uint32_t countCols(RowType *rowPtr) {
-  uint32_t nCols = 1;
-  if (rowPtr == nullptr) {
-    return 0;
-  }
-  CellType *colPtr = rowPtr->first;
-  CellType *nextPtr = nullptr;
-  while (colPtr != nullptr) {
-    nextPtr = colPtr->next;
-    colPtr = nextPtr;
-    nCols++;
-  }
-  return (nCols);
+static uint32_t countCols(RowType *rowPtr) {
+    uint32_t nCols = 0;
+
+    if (rowPtr == NULL) {
+        return nCols;
+    }
+
+    for (CellType *cell = rowPtr->first; cell != NULL; cell = cell->next) {
+        nCols++;
+    }
+
+    return nCols;
 }
 
-void countRowsAndCols(CsvType *csv) {
-  RowType *rowPtr = csv->firstRow;
-  RowType *nextPtr = nullptr;
-  uint32_t rowCount = 1;
-  if (rowPtr == nullptr) {
+static void countRowsAndCols(CsvType *csv) {
     csv->numRows = 0;
     csv->numCols = 0;
-    return;
-  }
-  while (rowPtr->next != nullptr) {
-    nextPtr = rowPtr->next;
-    uint32_t colCount = countCols(rowPtr);
-    if (colCount > csv->numCols) {
-      csv->numCols = colCount;
+
+    for (RowType *row = csv->firstRow; row != NULL; row = row->next) {
+        uint32_t cols = countCols(row);
+        row->numCols = cols;
+
+        if (cols > csv->numCols) {
+            csv->numCols = cols;
+        }
+
+        csv->numRows++;
     }
-    rowPtr = nextPtr;
-    rowCount++;
-  }
-  csv->numRows = rowCount;
 }
 
 // rows and cols use C convention, the first is indexed '0'
@@ -120,6 +117,10 @@ void countRowsAndCols(CsvType *csv) {
 // not 0 .. (n-1)
 CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   CsvCellType cell;
+  if (csv == NULL || csv->rowLookup == NULL || row >= csv->numRows) {
+    cell.status = missingRow;
+    return cell;
+  } 
   cell.status = emptyCell;
   cell.lastCellInRow = true;
   cell.bytes = 0;
@@ -176,7 +177,7 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   return (cell);
 }
 
-void parseLine(CsvType *csv, char *buffer, char sep) {
+static void parseLine(CsvType *csv, char *buffer, char sep) {
   // search for a seperator
   // This tries to identify some 8 bit double quote excel generates.
   // There is two, a start and end type. macros -- excelStartDQ and excelEndDQ
@@ -211,7 +212,9 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
   char cellBuf[LINEMAX];
   bool insideExcelDQ = false;
   bool insideDquote = false;
-  for (uint32_t i = 0; (i < strlen(buffer)); i++) {
+
+  size_t bufSize = strlen(buffer);
+  for (uint32_t i = 0; (i < bufSize) ; i++) {
     uint8_t thisCh = buffer[i];
     if (thisCh == altDquote) {
       uint32_t excelCode = (uint8_t)buffer[i] << 16 |
@@ -274,9 +277,14 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
         cellPtr->cell.cellContents = nullptr;
       } else {
         cellPtr->cell.status = normalCell;
-        cellPtr->cell.cellContents =
-            (char *)malloc(len + 4); // The extra 4 is just insurance.
-        strncpy(cellPtr->cell.cellContents, cellBuf, len);
+        cellPtr->cell.cellContents = (char *)malloc(len + 1);
+        if (cellPtr->cell.cellContents == NULL) {
+            fprintf(stderr,"Out of heap memory == file %s line %d\n",__FILE__,__LINE__);
+            fflush(stderr);
+            exit(1);
+        }
+        memcpy(cellPtr->cell.cellContents, cellBuf, len);
+        cellPtr->cell.cellContents[len] = '\0';
         if (DEBUGME > 1)
           fprintf(stderr, "cellBuf %u %s\n", len, cellBuf);
       }
@@ -292,6 +300,10 @@ void parseLine(CsvType *csv, char *buffer, char sep) {
         currRow->next = cellPtr;
       }
     }
+  }
+  if ( insideDquote || insideExcelDQ) {
+    fprintf(stderr,"A double quote is missing starting at row %d\n",
+            currLastRow->rowId);
   }
 }
 
@@ -376,7 +388,7 @@ CsvType *readCsv(char *filename, char sep) {
   fp = fopen(filename, "r");
   if (fp != nullptr) {
     uint32_t lines = 0;
-    char buffer[LINEMAX];
+    char buffer[LINEMAX * 8]; // This allows 7 lines to be appended
     memset((void *)buffer, 0, sizeof(buffer));
     uint32_t startIdx = 0;
     while (fgets(&buffer[startIdx], LINEMAX, fp) != nullptr) {

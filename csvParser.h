@@ -1,5 +1,5 @@
-#ifndef __CSV_PARSER__
-#define __CSV_PARSER__
+#ifndef CSV_PARSER_H
+#define CSV_PARSER_H
 
 /*
 **************************************
