@@ -120,7 +120,7 @@ CsvCellType getCell(CsvType *csv, uint32_t row, uint32_t col) {
   if (csv == NULL || csv->rowLookup == NULL || row >= csv->numRows) {
     cell.status = missingRow;
     return cell;
-  } 
+  }
   cell.status = emptyCell;
   cell.lastCellInRow = true;
   cell.bytes = 0;
@@ -279,7 +279,7 @@ static void parseLine(CsvType *csv, char *buffer, char sep) {
         cellPtr->cell.status = normalCell;
         cellPtr->cell.cellContents = (char *)malloc(len + 1);
         if (cellPtr->cell.cellContents == NULL) {
-            fprintf(stderr,"Out of heap memory == file %s line %d\n",__FILE__,__LINE__);
+            fprintf(stderr, "Out of heap memory == file %s line %d\n", __FILE__, __LINE__);
             fflush(stderr);
             exit(1);
         }
@@ -302,7 +302,7 @@ static void parseLine(CsvType *csv, char *buffer, char sep) {
     }
   }
   if ( insideDquote || insideExcelDQ) {
-    fprintf(stderr,"A double quote is missing starting at row %d\n",
+    fprintf(stderr, "A double quote is missing starting at row %d\n",
             currLastRow->rowId);
   }
 }
