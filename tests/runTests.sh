@@ -10,6 +10,8 @@ bigFile500000.csv
 quoted_commas.csv
 trailing_empty_cells.csv"
 
+gunzip bigFile500000.csv.gz
+
 thisdir=`pwd`
 cd ..
 mkdir build 2> /dev/null
