@@ -18,7 +18,7 @@ Copyright (c) 2024 Chris McGowan
 
 #define LINEMAX 32 * 1024
 // DEBUGME can be 0 1 2 3 4 5
-#define DEBUGME 2
+#define DEBUGME 0
 
 const uint32_t excelStartDQ = 0xE2809C;
 const uint32_t excelEndDQ = 0xE2809D;
